@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/text_footer"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/post_card_view_height"
-    android:background="@color/cardview_light_background"
-    android:orientation="vertical">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/colorPrimary"
-        android:gravity="center"
-        android:text="@string/title_see_more"
-        android:textColor="@color/colorAccent"
-        android:textSize="@dimen/title_text_size" />
-</LinearLayout>
+    android:layout_height="@dimen/item_footer_height"
+    android:layout_margin="@dimen/item_vertical_spacing"
+    android:background="@color/colorPrimary"
+    android:gravity="center"
+    android:paddingBottom="@dimen/item_footer_vertical_padding"
+    android:paddingTop="@dimen/item_footer_vertical_padding"
+    android:text="@string/title_see_more"
+    android:textColor="@color/colorAccent"
+    android:textSize="@dimen/title_text_size" />
