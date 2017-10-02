@@ -16,7 +16,7 @@ import butterknife.ButterKnife;
  * Created by thuyhien on 10/2/17.
  */
 
-public class FooterViewHolder extends RecyclerView.ViewHolder{
+public class FooterViewHolder extends RecyclerView.ViewHolder {
     public static final String EXTRA_NAME_URL = "url";
     public static final String EXTRA_VALUE_MORE_INFO_URL = "https://www.reddit.com/r/androiddev/";
 
@@ -25,7 +25,7 @@ public class FooterViewHolder extends RecyclerView.ViewHolder{
 
     public FooterViewHolder(View itemView) {
         super(itemView);
-        ButterKnife.bind(this. itemView);
+        ButterKnife.bind(this.itemView);
 
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -74,7 +74,7 @@ public class RedditPostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     @Override
     public int getItemViewType(int position) {
-        if(position == redditPostList.size()) {
+        if (position == redditPostList.size()) {
             return FOOTER_VIEW;
         } else {
             return CONTENT_VIEW;
