@@ -1,5 +1,6 @@
-package com.hasbrain.areyouandroiddev;
+package com.hasbrain.areyouandroiddev.activity;
 
+import com.hasbrain.areyouandroiddev.R;
 import com.hasbrain.areyouandroiddev.model.RedditPost;
 
 import java.util.List;

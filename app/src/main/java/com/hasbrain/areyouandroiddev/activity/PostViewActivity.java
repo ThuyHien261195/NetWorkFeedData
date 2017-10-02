@@ -1,8 +1,11 @@
-package com.hasbrain.areyouandroiddev;
+package com.hasbrain.areyouandroiddev.activity;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.webkit.WebView;
+
+import com.hasbrain.areyouandroiddev.R;
+import com.hasbrain.areyouandroiddev.adapter.FooterViewHolder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -21,7 +24,7 @@ public class PostViewActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        String url = getIntent().getStringExtra(ConstantCollection.BUNDLE_URL);
+        String url = getIntent().getStringExtra(FooterViewHolder.EXTRA_NAME_URL);
         webViewRedditPost.loadUrl(url);
     }
 }
