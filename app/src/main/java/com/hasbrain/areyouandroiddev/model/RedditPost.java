@@ -1,5 +1,7 @@
 package com.hasbrain.areyouandroiddev.model;
 
+import com.hasbrain.areyouandroiddev.adapter.RedditPostAdapter;
+
 /**
  * Created by Jupiter (vu.cao.duy@gmail.com) on 10/8/15.
  */
