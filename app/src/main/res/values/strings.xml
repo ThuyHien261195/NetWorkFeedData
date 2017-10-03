@@ -8,4 +8,7 @@
     <string name="title_created_days">%1$d days ago</string>
     <string name="title_created_months">%1$d months ago</string>
     <string name="title_created_years">%1$d years ago</string>
+    <string name="error_no_post">There\'s no posts\n at the moment</string>
+    <string name="action_retry">RETRY</string>
+    <string name="title_loading">Loading...</string>
 </resources>

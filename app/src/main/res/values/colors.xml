@@ -9,4 +9,5 @@
     <color name="color_author_title">#0A295A</color>
     <color name="color_screen_bg">#f2f2f2</color>
     <color name="color_item_bg">#FFFFFF</color>
+    <color name="color_loading_progress_bar">#696969</color>
 </resources>
