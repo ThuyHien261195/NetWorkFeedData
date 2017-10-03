@@ -1,38 +1,45 @@
 package com.hasbrain.areyouandroiddev.activity;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import com.hasbrain.areyouandroiddev.DownloadTask;
 import com.hasbrain.areyouandroiddev.R;
 import com.hasbrain.areyouandroiddev.adapter.RedditPostAdapter;
 import com.hasbrain.areyouandroiddev.datastore.FeedDataStore;
-import com.hasbrain.areyouandroiddev.datastore.FileBasedFeedDataStore;
-import com.hasbrain.areyouandroiddev.datastore.NetworkBasedFeedDataStore;
 import com.hasbrain.areyouandroiddev.model.RedditPost;
-import com.hasbrain.areyouandroiddev.model.RedditPostConverter;
 
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.View;
+import android.widget.LinearLayout;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class PostListActivity extends AppCompatActivity
         implements FeedDataStore.OnRedditPostsRetrievedListener {
+    public static final int FIRST_LOAD = 0;
+    public static final int REFRESH = 1;
+    public static final int LOAD_MORE = 2;
+    public static final int LOAD_MORE_DONE = 3;
 
-    public static final String DATA_JSON_FILE_NAME = "data.json";
-    public static final String URL_DATA_JSON = "https://www.reddit.com/r/androiddev/new.json";
-    private FeedDataStore feedDataStore;
+    @BindView(R.id.swipe_post_container)
+    SwipeRefreshLayout swipeLayoutRedditPost;
 
     @BindView(R.id.recycler_view_reddit_post)
     RecyclerView recyclerViewRedditPost;
+
+    @BindView(R.id.layout_error_no_posts)
+    LinearLayout linearLayoutErrorNoPosts;
+
+    private int loadingState;
+    private RedditPostAdapter redditPostAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,56 +47,111 @@ public class PostListActivity extends AppCompatActivity
         setContentView(getLayoutResource());
 
         ButterKnife.bind(this);
-        initDataByDownloading();
-    }
 
-    public void initDataByDownloading() {
-        DownloadTask downloadTask = new DownloadTask(this);
-        downloadTask.execute();
+        initDataByDownloading();
+        initView();
     }
 
     @Override
     public void onRedditPostsRetrieved(List<RedditPost> postList, Exception ex) {
-        if (postList != null) {
-            displayPostList(postList);
-        }
+        displayPostList(postList);
+    }
+
+    @OnClick(R.id.button_try)
+    public void onClickTryLoading() {
+        setLoadingState(FIRST_LOAD);
     }
 
     protected void displayPostList(List<RedditPost> postList) {
-        RedditPostAdapter redditPostAdapter = new RedditPostAdapter(this, postList);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        recyclerViewRedditPost.setLayoutManager(linearLayoutManager);
-        recyclerViewRedditPost.setAdapter(redditPostAdapter);
+        Log.d("LIST SIZE More @item", String.valueOf(postList.size()));
+        switch (loadingState) {
+            case FIRST_LOAD:
+                if (postList != null) {
+                    setStateForUI(true);
+                    LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+                    redditPostAdapter = new RedditPostAdapter(this, postList);
+                    recyclerViewRedditPost.setLayoutManager(linearLayoutManager);
+                    recyclerViewRedditPost.setAdapter(redditPostAdapter);
+                } else {
+                    setStateForUI(false);
+                }
+                break;
+            case REFRESH:
+                if (postList != null) {
+                    swipeLayoutRedditPost.setRefreshing(false);
+                    redditPostAdapter.updatePostListData(loadingState, postList);
+                    recyclerViewRedditPost.scrollToPosition(0);
+                }
+                break;
+            case LOAD_MORE:
+                loadingState = LOAD_MORE_DONE;
+                redditPostAdapter.removeLoadingItem();
+                if (postList != null) {
+                    redditPostAdapter.updatePostListData(loadingState, postList);
+                }
+                break;
+        }
+
+        initViewAfterDownloading();
     }
 
     protected int getLayoutResource() {
         return R.layout.activity_post_list;
     }
 
-//    public void initViews() {
-//        GsonBuilder gsonBuilder = new GsonBuilder();
-//        gsonBuilder.registerTypeAdapter(RedditPost.class, new RedditPostConverter());
-//        Gson gson = gsonBuilder.create();
-//        InputStream is = null;
-//        try {
-//            is = getAssets().open(DATA_JSON_FILE_NAME);
-//            feedDataStore = new FileBasedFeedDataStore(gson, is);
-//            feedDataStore.getPostList(new FeedDataStore.OnRedditPostsRetrievedListener() {
-//                @Override
-//                public void onRedditPostsRetrieved(List<RedditPost> postList, Exception ex) {
-//                    displayPostList(postList);
-//                }
-//            });
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } finally {
-//            if (is != null) {
-//                try {
-//                    is.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-//    }
+    private void initView() {
+        swipeLayoutRedditPost.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                setLoadingState(REFRESH);
+            }
+        });
+        swipeLayoutRedditPost.setColorSchemeColors(ContextCompat.getColor(this, android.R.color.holo_blue_light),
+                ContextCompat.getColor(this, android.R.color.holo_green_light),
+                ContextCompat.getColor(this, android.R.color.holo_orange_light),
+                ContextCompat.getColor(this, android.R.color.holo_red_light));
+    }
+
+    private void initDataByDownloading() {
+        DownloadTask downloadTask = new DownloadTask(this);
+        downloadTask.execute();
+    }
+
+    private void setStateForUI(boolean visible) {
+        swipeLayoutRedditPost.setEnabled(visible);
+        if (visible) {
+            recyclerViewRedditPost.setVisibility(View.VISIBLE);
+            linearLayoutErrorNoPosts.setVisibility(View.GONE);
+        } else {
+            recyclerViewRedditPost.setVisibility(View.GONE);
+            linearLayoutErrorNoPosts.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void setLoadingState(int state) {
+        loadingState = state;
+        initDataByDownloading();
+    }
+
+    private void initViewAfterDownloading() {
+        final LinearLayoutManager linearLayoutManager =
+                (LinearLayoutManager) recyclerViewRedditPost.getLayoutManager();
+        recyclerViewRedditPost.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            int visibleItems, firstVisibleItemPos, totalItems;
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0) {
+                    visibleItems = linearLayoutManager.getChildCount();
+                    firstVisibleItemPos = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
+                    totalItems = linearLayoutManager.getItemCount();
+                    if (loadingState != LOAD_MORE && (visibleItems + firstVisibleItemPos >= totalItems)) {
+                        Log.d("More @item", "Loading");
+                        redditPostAdapter.addLoadingItem();
+                        setLoadingState(LOAD_MORE);
+                    }
+                }
+            }
+        });
+    }
 }
