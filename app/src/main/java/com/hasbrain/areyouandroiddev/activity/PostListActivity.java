@@ -1,11 +1,14 @@
 package com.hasbrain.areyouandroiddev.activity;
 
+import com.hasbrain.areyouandroiddev.DownloadListener;
 import com.hasbrain.areyouandroiddev.DownloadTask;
 import com.hasbrain.areyouandroiddev.R;
 import com.hasbrain.areyouandroiddev.adapter.RedditPostAdapter;
-import com.hasbrain.areyouandroiddev.datastore.FeedDataStore;
 import com.hasbrain.areyouandroiddev.model.RedditPost;
 
+import android.graphics.PorterDuff;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -23,7 +26,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class PostListActivity extends AppCompatActivity
-        implements FeedDataStore.OnRedditPostsRetrievedListener {
+        implements DownloadListener {
     public static final int FIRST_LOAD = 0;
     public static final int REFRESH = 1;
     public static final int LOAD_MORE = 2;
@@ -40,6 +43,7 @@ public class PostListActivity extends AppCompatActivity
 
     private int loadingState;
     private RedditPostAdapter redditPostAdapter;
+    private String afterId = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,8 +57,21 @@ public class PostListActivity extends AppCompatActivity
     }
 
     @Override
-    public void onRedditPostsRetrieved(List<RedditPost> postList, Exception ex) {
+    public void onRedditPostDownload(List<RedditPost> postList, Exception ex) {
         displayPostList(postList);
+    }
+
+    @Override
+    public boolean getActiveNetwork() {
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) this.getSystemService(CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()
+                && (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE
+                || networkInfo.getType() == ConnectivityManager.TYPE_WIFI)) {
+            return true;
+        }
+        return false;
     }
 
     @OnClick(R.id.button_try)
@@ -63,7 +80,6 @@ public class PostListActivity extends AppCompatActivity
     }
 
     protected void displayPostList(List<RedditPost> postList) {
-        Log.d("LIST SIZE More @item", String.valueOf(postList.size()));
         switch (loadingState) {
             case FIRST_LOAD:
                 if (postList != null) {
@@ -77,8 +93,8 @@ public class PostListActivity extends AppCompatActivity
                 }
                 break;
             case REFRESH:
+                swipeLayoutRedditPost.setRefreshing(false);
                 if (postList != null) {
-                    swipeLayoutRedditPost.setRefreshing(false);
                     redditPostAdapter.updatePostListData(loadingState, postList);
                     recyclerViewRedditPost.scrollToPosition(0);
                 }
@@ -90,6 +106,9 @@ public class PostListActivity extends AppCompatActivity
                     redditPostAdapter.updatePostListData(loadingState, postList);
                 }
                 break;
+        }
+        if (postList != null) {
+            afterId = "t3_" + postList.get(postList.size() - 1).getId();
         }
 
         initViewAfterDownloading();
@@ -113,7 +132,7 @@ public class PostListActivity extends AppCompatActivity
     }
 
     private void initDataByDownloading() {
-        DownloadTask downloadTask = new DownloadTask(this);
+        DownloadTask downloadTask = new DownloadTask(this, afterId);
         downloadTask.execute();
     }
 
@@ -141,12 +160,13 @@ public class PostListActivity extends AppCompatActivity
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                if (dy > 0) {
+                if (dy > 0 && linearLayoutManager != null) {
                     visibleItems = linearLayoutManager.getChildCount();
                     firstVisibleItemPos = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
                     totalItems = linearLayoutManager.getItemCount();
-                    if (loadingState != LOAD_MORE && (visibleItems + firstVisibleItemPos >= totalItems)) {
-                        Log.d("More @item", "Loading");
+                    if (loadingState != LOAD_MORE
+                            && getActiveNetwork()
+                            && (visibleItems + firstVisibleItemPos >= totalItems)) {
                         redditPostAdapter.addLoadingItem();
                         setLoadingState(LOAD_MORE);
                     }
