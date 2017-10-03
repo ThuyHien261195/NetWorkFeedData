@@ -1,24 +1,14 @@
 package com.hasbrain.areyouandroiddev;
 
+import android.app.Activity;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapter;
-import com.google.gson.reflect.TypeToken;
 import com.hasbrain.areyouandroiddev.datastore.FeedDataStore;
 import com.hasbrain.areyouandroiddev.datastore.NetworkBasedFeedDataStore;
 import com.hasbrain.areyouandroiddev.model.RedditPost;
-import com.hasbrain.areyouandroiddev.model.RedditPostConverter;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.List;
 
 /**
@@ -27,25 +17,29 @@ import java.util.List;
 
 public class DownloadTask extends AsyncTask<Void, Integer, List<RedditPost>> {
 
-    public static final String URL_DATA_JSON = "https://www.reddit.com/r/androiddev/new.json";
-
-    private FeedDataStore.OnRedditPostsRetrievedListener retrievedListener;
+    private DownloadListener downloadListener;
     private NetworkBasedFeedDataStore networkBasedFeedDataStore;
     private List<RedditPost> redditPostList;
+    private String afterId = "";
 
-    public DownloadTask(FeedDataStore.OnRedditPostsRetrievedListener retrievedListener) {
-        this.retrievedListener = retrievedListener;
+    public DownloadTask(Activity activity, String afterId) {
+        this.downloadListener = (DownloadListener) activity;
+        this.afterId = afterId;
     }
 
     @Override
     protected void onPreExecute() {
-        networkBasedFeedDataStore = new NetworkBasedFeedDataStore();
-        networkBasedFeedDataStore.setBaseUrl(URL_DATA_JSON);
+        if (downloadListener.getActiveNetwork()) {
+            networkBasedFeedDataStore = new NetworkBasedFeedDataStore();
+        } else {
+            downloadListener.onRedditPostDownload(null, null);
+            cancel(true);
+        }
     }
 
     @Override
     protected List<RedditPost> doInBackground(Void... params) {
-        networkBasedFeedDataStore.getPostList(new FeedDataStore.OnRedditPostsRetrievedListener() {
+        networkBasedFeedDataStore.getPostList(null, null, afterId, new FeedDataStore.OnRedditPostsRetrievedListener() {
             @Override
             public void onRedditPostsRetrieved(List<RedditPost> postList, Exception ex) {
                 getRedditPostListFromData(postList);
@@ -56,7 +50,7 @@ public class DownloadTask extends AsyncTask<Void, Integer, List<RedditPost>> {
 
     @Override
     protected void onPostExecute(List<RedditPost> result) {
-        retrievedListener.onRedditPostsRetrieved(result, null);
+        downloadListener.onRedditPostDownload(result, null);
     }
 
     private void getRedditPostListFromData(List<RedditPost> redditPostList) {
