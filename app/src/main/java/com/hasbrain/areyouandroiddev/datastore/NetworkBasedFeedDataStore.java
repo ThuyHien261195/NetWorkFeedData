@@ -32,30 +32,37 @@ public class NetworkBasedFeedDataStore implements FeedDataStore {
 
     private static final int READ_TIME_OUT = 3000;
     private static final int CONNECT_TIME_OUT = 3000;
+    public static final String URL_DATA_JSON = "https://www.reddit.com/r/androiddev/new.json";
+    private static final int LOADING_ITEM_LIMIT = 8;
     private String baseUrl;
 
     @Override
-    public void getPostList(OnRedditPostsRetrievedListener onRedditPostsRetrievedListener) {
+    public void getPostList(String topic, String before, String after,
+                            OnRedditPostsRetrievedListener onRedditPostsRetrievedListener) {
         List<RedditPost> redditPostList = null;
         try {
-            redditPostList = downloadFromUrl(baseUrl);
+            setBaseUrl(after);
+            redditPostList = downloadFromUrl();
         } catch (IOException e) {
             e.printStackTrace();
         }
         onRedditPostsRetrievedListener.onRedditPostsRetrieved(redditPostList, null);
     }
 
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
+    public void setBaseUrl(String afterId) {
+        this.baseUrl = URL_DATA_JSON + "?limit=" + LOADING_ITEM_LIMIT;
+        if (!afterId.equals("")) {
+            this.baseUrl += "&after=" + afterId;
+        }
     }
 
-    public List<RedditPost> downloadFromUrl(String stringUrl) throws IOException {
+    public List<RedditPost> downloadFromUrl() throws IOException {
         InputStream inputStream = null;
         HttpURLConnection connection = null;
         List<RedditPost> redditPostList = null;
 
         try {
-            URL url = new URL(stringUrl);
+            URL url = new URL(baseUrl);
             connection = (HttpURLConnection) url.openConnection();
             connection.setReadTimeout(READ_TIME_OUT);
             connection.setConnectTimeout(CONNECT_TIME_OUT);

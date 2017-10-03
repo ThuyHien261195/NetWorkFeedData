@@ -27,9 +27,10 @@ public class FileBasedFeedDataStore implements FeedDataStore {
     }
 
     @Override
-    public void getPostList(OnRedditPostsRetrievedListener onRedditPostsRetrievedListener) {
+    public void getPostList(String topic, String before, String after,
+                            OnRedditPostsRetrievedListener onRedditPostsRetrievedListener) {
         if (onRedditPostsRetrievedListener != null) {
-            Type type = new TypeToken<List<RedditPost>>(){}.getType();
+            Type type = new TypeToken<List<RedditPost>>() {}.getType();
             List<RedditPost> posts = gson.fromJson(new InputStreamReader(fileInputStream), type);
             onRedditPostsRetrievedListener.onRedditPostsRetrieved(posts, null);
         }
