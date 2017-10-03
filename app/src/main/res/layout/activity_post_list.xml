@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/swipe_post_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/color_screen_bg"
@@ -10,8 +11,40 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".activity.PostListActivity">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view_reddit_post"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-</RelativeLayout>
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view_reddit_post"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:id="@+id/layout_error_no_posts"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/text_error_no_posts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="@string/error_no_post"
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/title_error_text_size" />
+
+            <Button
+                android:id="@+id/button_try"
+                style="@style/CommonButtonTheme"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/action_retry" />
+        </LinearLayout>
+    </LinearLayout>
+</android.support.v4.widget.SwipeRefreshLayout>
