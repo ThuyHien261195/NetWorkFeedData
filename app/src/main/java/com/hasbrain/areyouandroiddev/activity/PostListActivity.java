@@ -4,6 +4,8 @@ import com.hasbrain.areyouandroiddev.DownloadListener;
 import com.hasbrain.areyouandroiddev.DownloadTask;
 import com.hasbrain.areyouandroiddev.R;
 import com.hasbrain.areyouandroiddev.adapter.RedditPostAdapter;
+import com.hasbrain.areyouandroiddev.datastore.FeedDataStore;
+import com.hasbrain.areyouandroiddev.datastore.NetworkBasedFeedDataStore;
 import com.hasbrain.areyouandroiddev.model.RedditPost;
 
 import android.graphics.PorterDuff;
@@ -41,6 +43,7 @@ public class PostListActivity extends AppCompatActivity
     @BindView(R.id.layout_error_no_posts)
     LinearLayout linearLayoutErrorNoPosts;
 
+    private FeedDataStore feedDataStore;
     private int loadingState;
     private RedditPostAdapter redditPostAdapter;
     private String afterId = "";
@@ -52,6 +55,8 @@ public class PostListActivity extends AppCompatActivity
 
         ButterKnife.bind(this);
 
+        feedDataStore = new NetworkBasedFeedDataStore();
+       
         initDataByDownloading();
         initView();
     }
@@ -59,19 +64,6 @@ public class PostListActivity extends AppCompatActivity
     @Override
     public void onRedditPostDownload(List<RedditPost> postList, Exception ex) {
         displayPostList(postList);
-    }
-
-    @Override
-    public boolean getActiveNetwork() {
-        ConnectivityManager connectivityManager =
-                (ConnectivityManager) this.getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()
-                && (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE
-                || networkInfo.getType() == ConnectivityManager.TYPE_WIFI)) {
-            return true;
-        }
-        return false;
     }
 
     @OnClick(R.id.button_try)
@@ -132,8 +124,8 @@ public class PostListActivity extends AppCompatActivity
     }
 
     private void initDataByDownloading() {
-        DownloadTask downloadTask = new DownloadTask(this, afterId);
-        downloadTask.execute();
+        DownloadTask downloadTask = new DownloadTask(this, feedDataStore);
+        downloadTask.execute(afterId);
     }
 
     private void setStateForUI(boolean visible) {
@@ -165,7 +157,6 @@ public class PostListActivity extends AppCompatActivity
                     firstVisibleItemPos = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
                     totalItems = linearLayoutManager.getItemCount();
                     if (loadingState != LOAD_MORE
-                            && getActiveNetwork()
                             && (visibleItems + firstVisibleItemPos >= totalItems)) {
                         redditPostAdapter.addLoadingItem();
                         setLoadingState(LOAD_MORE);

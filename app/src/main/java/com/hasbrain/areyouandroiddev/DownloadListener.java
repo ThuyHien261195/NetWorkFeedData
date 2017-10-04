@@ -12,6 +12,4 @@ import java.util.List;
 
 public interface DownloadListener {
     void onRedditPostDownload(List<RedditPost> redditPostList, Exception ex);
-
-    boolean getActiveNetwork();
 }

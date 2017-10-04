@@ -15,30 +15,20 @@ import java.util.List;
  * Created by thuyhien on 10/2/17.
  */
 
-public class DownloadTask extends AsyncTask<Void, Integer, List<RedditPost>> {
+public class DownloadTask extends AsyncTask<String, Integer, List<RedditPost>> {
 
     private DownloadListener downloadListener;
-    private NetworkBasedFeedDataStore networkBasedFeedDataStore;
+    private FeedDataStore networkBasedFeedDataStore;
     private List<RedditPost> redditPostList;
-    private String afterId = "";
 
-    public DownloadTask(Activity activity, String afterId) {
-        this.downloadListener = (DownloadListener) activity;
-        this.afterId = afterId;
+    public DownloadTask(DownloadListener downloadListener, FeedDataStore networkBasedFeedDataStore) {
+        this.downloadListener = downloadListener;
+        this.networkBasedFeedDataStore = networkBasedFeedDataStore;
     }
 
     @Override
-    protected void onPreExecute() {
-        if (downloadListener.getActiveNetwork()) {
-            networkBasedFeedDataStore = new NetworkBasedFeedDataStore();
-        } else {
-            downloadListener.onRedditPostDownload(null, null);
-            cancel(true);
-        }
-    }
-
-    @Override
-    protected List<RedditPost> doInBackground(Void... params) {
+    protected List<RedditPost> doInBackground(String... params) {
+        String afterId = params[0];
         networkBasedFeedDataStore.getPostList(null, null, afterId, new FeedDataStore.OnRedditPostsRetrievedListener() {
             @Override
             public void onRedditPostsRetrieved(List<RedditPost> postList, Exception ex) {
