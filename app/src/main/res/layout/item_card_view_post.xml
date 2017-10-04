@@ -33,7 +33,7 @@
                 android:layout_marginLeft="@dimen/text_view_horizontal_spacing"
                 android:gravity="bottom"
                 android:text="@string/title_author"
-                android:textColor="@color/color_author_title" />
+                android:textColor="@color/color_post_title" />
         </LinearLayout>
 
         <TextView
