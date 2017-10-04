@@ -25,5 +25,5 @@
     <!-- Item loading more -->
     <dimen name="item_loading_vertical_spacing">20dp</dimen>
     <dimen name="progress_bar_horizontal_spacing">10dp</dimen>
-    <dimen name="title_loading_text_size">30sp</dimen>
+    <dimen name="title_loading_text_size">20sp</dimen>
 </resources>
