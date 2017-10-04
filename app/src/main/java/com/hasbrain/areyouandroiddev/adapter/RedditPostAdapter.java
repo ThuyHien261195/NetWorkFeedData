@@ -88,7 +88,9 @@ public class RedditPostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     }
 
     public void updatePostListData(int loadingState, List<RedditPost> newPostList) {
-        if (loadingState == PostListActivity.REFRESH && redditPostList != null) {
+        if (loadingState == PostListActivity.REFRESH
+                || loadingState == PostListActivity.FIRST_LOAD
+                && redditPostList != null) {
             redditPostList.clear();
         }
 
