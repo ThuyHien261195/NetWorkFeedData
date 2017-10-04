@@ -8,19 +8,16 @@ import com.hasbrain.areyouandroiddev.datastore.FeedDataStore;
 import com.hasbrain.areyouandroiddev.datastore.NetworkBasedFeedDataStore;
 import com.hasbrain.areyouandroiddev.model.RedditPost;
 
-import android.graphics.PorterDuff;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -56,9 +53,9 @@ public class PostListActivity extends AppCompatActivity
         ButterKnife.bind(this);
 
         feedDataStore = new NetworkBasedFeedDataStore();
-       
-        initDataByDownloading();
+
         initView();
+        initDownloadDataWithState(FIRST_LOAD);
     }
 
     @Override
@@ -68,7 +65,7 @@ public class PostListActivity extends AppCompatActivity
 
     @OnClick(R.id.button_try)
     public void onClickTryLoading() {
-        setLoadingState(FIRST_LOAD);
+        initDownloadDataWithState(FIRST_LOAD);
     }
 
     protected void displayPostList(List<RedditPost> postList) {
@@ -76,10 +73,7 @@ public class PostListActivity extends AppCompatActivity
             case FIRST_LOAD:
                 if (postList != null) {
                     setStateForUI(true);
-                    LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-                    redditPostAdapter = new RedditPostAdapter(this, postList);
-                    recyclerViewRedditPost.setLayoutManager(linearLayoutManager);
-                    recyclerViewRedditPost.setAdapter(redditPostAdapter);
+                    redditPostAdapter.updatePostListData(loadingState, postList);
                 } else {
                     setStateForUI(false);
                 }
@@ -98,6 +92,8 @@ public class PostListActivity extends AppCompatActivity
                     redditPostAdapter.updatePostListData(loadingState, postList);
                 }
                 break;
+            default:
+                break;
         }
         if (postList != null) {
             afterId = "t3_" + postList.get(postList.size() - 1).getId();
@@ -111,10 +107,16 @@ public class PostListActivity extends AppCompatActivity
     }
 
     private void initView() {
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        redditPostAdapter = new RedditPostAdapter(this, new ArrayList<RedditPost>());
+        recyclerViewRedditPost.setLayoutManager(linearLayoutManager);
+        recyclerViewRedditPost.setAdapter(redditPostAdapter);
+
         swipeLayoutRedditPost.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                setLoadingState(REFRESH);
+                afterId = "";
+                initDownloadDataWithState(REFRESH);
             }
         });
         swipeLayoutRedditPost.setColorSchemeColors(ContextCompat.getColor(this, android.R.color.holo_blue_light),
@@ -123,7 +125,8 @@ public class PostListActivity extends AppCompatActivity
                 ContextCompat.getColor(this, android.R.color.holo_red_light));
     }
 
-    private void initDataByDownloading() {
+    private void initDownloadDataWithState(int state) {
+        loadingState = state;
         DownloadTask downloadTask = new DownloadTask(this, feedDataStore);
         downloadTask.execute(afterId);
     }
@@ -137,11 +140,6 @@ public class PostListActivity extends AppCompatActivity
             recyclerViewRedditPost.setVisibility(View.GONE);
             linearLayoutErrorNoPosts.setVisibility(View.VISIBLE);
         }
-    }
-
-    private void setLoadingState(int state) {
-        loadingState = state;
-        initDataByDownloading();
     }
 
     private void initViewAfterDownloading() {
@@ -159,7 +157,7 @@ public class PostListActivity extends AppCompatActivity
                     if (loadingState != LOAD_MORE
                             && (visibleItems + firstVisibleItemPos >= totalItems)) {
                         redditPostAdapter.addLoadingItem();
-                        setLoadingState(LOAD_MORE);
+                        initDownloadDataWithState(LOAD_MORE);
                     }
                 }
             }
