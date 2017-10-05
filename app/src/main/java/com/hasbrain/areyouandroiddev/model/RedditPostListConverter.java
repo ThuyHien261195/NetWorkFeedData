@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 
@@ -18,14 +19,24 @@ import java.util.List;
 public class RedditPostListConverter extends EasyDeserializer<List<RedditPost>> {
     @Override
     public List<RedditPost> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-        JsonElement dataElement = json.getAsJsonObject().get("data");
-        JsonArray redditPostsJson = dataElement.getAsJsonObject().get("children").getAsJsonArray();
-        Type type = new TypeToken<List<RedditPost>>() {
-        }.getType();
+        if (json != null && json.isJsonObject()) {
+            JsonElement jsonElement = json.getAsJsonObject().get("data");
 
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(RedditPost.class, new RedditPostConverter());
-        Gson gson = gsonBuilder.create();
-        return gson.fromJson(redditPostsJson, type);
+            if (jsonElement != null && jsonElement.isJsonObject()) {
+                JsonElement childJsonElement = jsonElement.getAsJsonObject().get("children");
+
+                if (childJsonElement != null && childJsonElement.isJsonArray()) {
+                    JsonArray redditPostsJson = childJsonElement.getAsJsonArray();
+                    Type type = new TypeToken<List<RedditPost>>() {
+                    }.getType();
+
+                    GsonBuilder gsonBuilder = new GsonBuilder();
+                    gsonBuilder.registerTypeAdapter(RedditPost.class, new RedditPostConverter());
+                    Gson gson = gsonBuilder.create();
+                    return gson.fromJson(redditPostsJson, type);
+                }
+            }
+        }
+        return null;
     }
 }
