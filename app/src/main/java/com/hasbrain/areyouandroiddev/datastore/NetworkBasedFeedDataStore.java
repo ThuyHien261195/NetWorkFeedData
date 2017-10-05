@@ -39,19 +39,9 @@ public class NetworkBasedFeedDataStore implements FeedDataStore {
     public static final String BASE_URL = "https://www.reddit.com/r/androiddev/";
     private static final int LOADING_ITEM_LIMIT = 8;
 
-    @Override
-    public void getPostList(String topic, String before, String after,
-                            OnRedditPostsRetrievedListener onRedditPostsRetrievedListener) {
-        try {
-            List<RedditPost> redditPostList = downloadFromUrlByRetrofit(after);
-            onRedditPostsRetrievedListener.onRedditPostsRetrieved(redditPostList, null);
-        } catch (IOException e) {
-            onRedditPostsRetrievedListener.onRedditPostsRetrieved(null, e);
-        }
-    }
+    private ApiEndpointInterface apiService;
 
-    private List<RedditPost> downloadFromUrlByRetrofit(String afterId) throws IOException {
-        List<RedditPost> redditPostList = null;
+    public NetworkBasedFeedDataStore() {
         Type type = new TypeToken<List<RedditPost>>() {
         }.getType();
         GsonBuilder gsonBuilder = new GsonBuilder();
@@ -63,8 +53,26 @@ public class NetworkBasedFeedDataStore implements FeedDataStore {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
 
-        ApiEndpointInterface apiService = retrofit.create(ApiEndpointInterface.class);
+        apiService = retrofit.create(ApiEndpointInterface.class);
+    }
 
+    @Override
+    public void getPostList(String topic, String before, String after,
+                            OnRedditPostsRetrievedListener onRedditPostsRetrievedListener) {
+        try {
+            List<RedditPost> redditPostList = downloadFromUrlByRetrofit(after);
+            Log.d("@item", String.valueOf(redditPostList.size()));
+            for (int i = 0; i < redditPostList.size(); i++) {
+                Log.d("@item", String.valueOf(i) + ": " + redditPostList.get(i).getTitle());
+            }
+            onRedditPostsRetrievedListener.onRedditPostsRetrieved(redditPostList, null);
+        } catch (IOException e) {
+            onRedditPostsRetrievedListener.onRedditPostsRetrieved(null, e);
+        }
+    }
+
+    private List<RedditPost> downloadFromUrlByRetrofit(String afterId) throws IOException {
+        List<RedditPost> redditPostList = null;
         Call<List<RedditPost>> call = apiService.getRedditPostList(LOADING_ITEM_LIMIT, afterId);
 
         Response<List<RedditPost>> redditPostListResponse = call.execute();
